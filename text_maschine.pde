@@ -12,6 +12,7 @@ int sendToPort = 9000;
 String sendToAddress = "127.0.0.1";
 String oscStartRecordingPath = "/record";
 String oscStopRecordingPath = "/stop";
+String oscCancelRecordingPath = "/cancel";
 
 int hSpace = 30;
 int vSpace = 10;
@@ -40,11 +41,14 @@ Einheit currentEinheit;
 
 boolean isRecording = false;
 boolean hasStateChanged = true;
+boolean isCancelButtonPressed = false;
 
 HashMap<Character, Integer> keyIdMapping;
 HashMap<Integer, Integer> buttonIdMapping;
 int[] ports = {12, 16, 20, 21, 26, 4, 17, 27, 22, 25, 14, 15, 18, 23, 24};
 int activePort = -1;
+int cancelPort = 19;
+char cancelKey = 'u';
 
 void setup() {
   buttonIdMapping = new HashMap<Integer, Integer>();
@@ -54,6 +58,7 @@ void setup() {
     buttonIdMapping.put(port, id);
     ++id;
   }
+  GPIO.pinMode(cancelPort, GPIO.INPUT);
 
   keyIdMapping = new HashMap<Character, Integer>();
   keyIdMapping.put('q', 0);
@@ -123,6 +128,12 @@ void draw() {
           hasStateChanged = true;
       }
     }
+    if (!isCancelButtonPressed && GPIO.digitalRead(cancelPort) == GPIO.HIGH) {
+      cancelButtonPressed();
+      isCancelButtonPressed = true;
+    } else if (isCancelButtonPressed && GPIO.digitalRead(cancelPort) == GPIO.LOW) {
+      isCancelButtonPressed = false;
+    }
   }
   if (hasStateChanged)
   {
@@ -184,6 +195,10 @@ void keyPressed() {
     isRecording = true;
     hasStateChanged = true;
   }
+  if (!isCancelButtonPressed && cancelKey == key) {
+    cancelButtonPressed();
+    isCancelButtonPressed = true;
+  }
 }
 
 void keyReleased() {
@@ -192,6 +207,14 @@ void keyReleased() {
     isRecording = false;
     hasStateChanged = true;
   }
+  if (isCancelButtonPressed && cancelKey == key) {
+    isCancelButtonPressed = false;
+  }
+}
+
+void cancelButtonPressed() {
+  OscMessage message = new OscMessage(oscCancelRecordingPath);
+  osc.send(message, receiver);
 }
 
 void buttonPressed(int id) {
