@@ -1,3 +1,5 @@
+import processing.io.*;
+
 import netP5.*;
 import oscP5.*;
 
@@ -40,8 +42,19 @@ boolean isRecording = false;
 boolean hasStateChanged = true;
 
 HashMap<Character, Integer> keyIdMapping;
+HashMap<Integer, Integer> buttonIdMapping;
+int[] ports = {12, 16, 20, 21, 26, 4, 17, 27, 22, 25, 14, 15, 18, 23, 24};
+int activePort = -1;
 
 void setup() {
+  buttonIdMapping = new HashMap<Integer, Integer>();
+  int id = 0;
+  for (int port : ports) {
+    GPIO.pinMode(port, GPIO.INPUT);
+    buttonIdMapping.put(port, id);
+    ++id;
+  }
+
   keyIdMapping = new HashMap<Character, Integer>();
   keyIdMapping.put('q', 0);
   keyIdMapping.put('w', 1);
@@ -96,6 +109,21 @@ void setup() {
 }
 
 void draw() {
+  if (keyPressed == false) {
+    for (int port : ports) {
+      if (activePort == -1 && !isRecording && GPIO.digitalRead(port) == GPIO.HIGH) {
+          buttonPressed(buttonIdMapping.get(port));
+          isRecording = true;
+          activePort = port;
+          hasStateChanged = true;
+      } else if (activePort == port && isRecording && GPIO.digitalRead(port) == GPIO.LOW) {
+          buttonReleased(buttonIdMapping.get(port));
+          isRecording = false;
+          activePort = -1;
+          hasStateChanged = true;
+      }
+    }
+  }
   if (hasStateChanged)
   {
     background(backgroundColor);
@@ -152,20 +180,29 @@ void drawCurrentEinheit() {
 
 void keyPressed() {
   if (!isRecording && keyIdMapping.containsKey(key)) {
-    int id = keyIdMapping.get(key);
-    currentEinheit = einheiten[id];
-    OscMessage message = new OscMessage(oscStartRecordingPath);
-    message.add(id);
-    osc.send(message, receiver);
+    buttonPressed(keyIdMapping.get(key));
     isRecording = true;
     hasStateChanged = true;
   }
 }
 
 void keyReleased() {
-  if (isRecording && keyIdMapping.containsKey(key) && getId(einheiten, currentEinheit) == keyIdMapping.get(key)) {
+  if (isRecording && keyIdMapping.containsKey(key)) {
+    buttonReleased(keyIdMapping.get(key));
     isRecording = false;
     hasStateChanged = true;
+  }
+}
+
+void buttonPressed(int id) {
+  currentEinheit = einheiten[id];
+  OscMessage message = new OscMessage(oscStartRecordingPath);
+  message.add(id);
+  osc.send(message, receiver);
+}
+
+void buttonReleased(int id) {
+  if (id == getId(einheiten, currentEinheit)) {
     OscMessage message = new OscMessage(oscStopRecordingPath);
     osc.send(message, receiver);
   }
