@@ -89,8 +89,8 @@ void setup() {
   keyIdMapping.put('v', 13);
   keyIdMapping.put('b', 14);
   
-  String dataPath = sketchPath() + "/texte/";
-  String fontDir = sketchPath() + "/gnu-freefont_freeserif/";
+  String dataPath = dataPath("") + "/texte/";
+  String fontDir = dataPath("") + "/gnu-freefont_freeserif/";
   languages = new String[]{"DE", "EN"};
   try {
     welcome = getText(dataPath, "Welcome.txt", languages);
