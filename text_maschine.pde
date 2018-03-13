@@ -42,6 +42,7 @@ Einheit currentEinheit;
 
 boolean hasStateChanged = true;
 boolean isCancelButtonPressed = false;
+boolean isKeyPressed = false;
 enum State {
   RECORDING,
   WELCOME,
@@ -124,7 +125,7 @@ void setup() {
 }
 
 void draw() {
-  if (keyPressed == false) {
+  if (isKeyPressed == false) {
     for (int port : ports) {
       if (activePort == -1 && currentState == State.WELCOME && GPIO.digitalRead(port) == GPIO.HIGH) {
           buttonPressed(buttonIdMapping.get(port));
@@ -214,10 +215,12 @@ void keyPressed() {
     buttonPressed(keyIdMapping.get(key));
     currentState = State.RECORDING;
     hasStateChanged = true;
+    isKeyPressed = true;
   }
   if (!isCancelButtonPressed && cancelKey == key) {
     cancelButtonPressed();
     isCancelButtonPressed = true;
+    isKeyPressed = true;
   }
 }
 
@@ -227,9 +230,11 @@ void keyReleased() {
     currentState = State.GOODBYE;
     goodbyeTime = millis() + goodbyeThreshold;
     hasStateChanged = true;
+    isKeyPressed = false;
   }
   if (isCancelButtonPressed && cancelKey == key) {
     isCancelButtonPressed = false;
+    isKeyPressed = false;
   }
 }
 
