@@ -33,15 +33,22 @@ StringDict getText(String path, String filename, String[] languages) throws Exce
   
   println("Read Text from file: " + filename);
   String[] lines = loadStrings(path + filename);
-  if (lines.length != languages.length) { throw new Exception(filename + ": Language mismatch!"); }
  
   StringDict texts = new StringDict();
-  for (int i = 0; i < languages.length; ++i) {
-    String[] text = match(lines[i], "(" + languages[i] + ")@(.*)");
-    if (text == null) { throw new Exception(filename + ": No text for " + languages[i] + "!"); }
-    if (text.length != 3 || text[2].isEmpty()) { throw new Exception(filename + ": Too few lines!"); }
+  int lineNumber = 0;
+  int index = 0;
+  while (index < languages.length)
+  {
+    String[] text = match(lines[lineNumber], "(" + languages[index] + ")@(.*)");
+    if (text == null) { throw new Exception(filename + ": No text for " + languages[index] + "!"); }
+    ++lineNumber;
+    ++index;
+    while (lineNumber < lines.length && match(lines[lineNumber], "@") == null) {
+      text[2] = text[2] + "\n" + lines[lineNumber];
+      ++lineNumber;
+    }
     texts.set(text[1], text[2]);
-  }
+}
   
   return texts;
 }

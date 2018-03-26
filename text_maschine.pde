@@ -26,7 +26,7 @@ Feld[] einheitenFelder;
 PFont[] fontLang;
 PFont[] font;
 
-int languageFontSize = 45;
+int languageFontSize = 40;
 int einheitenFontSize = 35;
 int backgroundColor = 245;
 int textColor0 = 50;
